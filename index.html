@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#20d77b">
+<title>FPL Coach</title>
+<style>
+:root{--bg:#06100b;--card:#0d1c15;--line:#214431;--txt:#f3faf6;--muted:#91aa9b;--g:#20d77b;--soft:#123020;--r:#ff7777;--y:#ffd166}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 8% 0,#173c27,#06100b 42%);color:var(--txt);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{max-width:1120px;margin:auto;padding:0 16px}
+header{position:sticky;top:0;z-index:10;background:#06110de8;border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}.head{min-height:70px;display:flex;align-items:center;justify-content:space-between}.brand{display:flex;align-items:center;gap:10px}.logo{width:42px;height:42px;border-radius:13px;background:var(--g);color:#052511;display:grid;place-items:center;font-weight:950}.title{font-size:22px;font-weight:900}.muted{font-size:12px;color:var(--muted)}
+main{padding:18px 0 50px}.card{background:rgba(13,28,21,.96);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}h2{font-size:17px;margin:0 0 12px}.nav{display:flex;gap:7px;overflow:auto;padding:10px 0}.nav button{white-space:nowrap}.nav button.active{background:var(--g);color:#052511}.nav button:not(.active){background:#12261b;color:var(--txt);border:1px solid var(--line)}
+button,input{font:inherit;border-radius:10px;padding:11px 13px}button{border:0;background:var(--g);color:#052511;font-weight:850;cursor:pointer}.secondary{background:#12261b;color:var(--txt);border:1px solid var(--line)}
+.upload{border:1.5px dashed #35664a;border-radius:14px;padding:24px;text-align:center;background:#091710}.upload input{display:none}.upload label{display:inline-block;background:var(--g);color:#052511;font-weight:850;padding:12px 16px;border-radius:11px;cursor:pointer}.preview{display:flex;gap:10px;overflow:auto;margin-top:12px}.preview img{width:86px;height:112px;object-fit:cover;border-radius:9px;border:1px solid var(--line)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat span{font-size:11px;color:var(--muted)}.stat b{display:block;font-size:22px;margin-top:5px}.pill{display:inline-block;padding:5px 8px;border-radius:999px;background:var(--soft);border:1px solid var(--line);font-size:11px;margin:2px}.big{font-size:24px;font-weight:900}.green{color:var(--g)}.red{color:var(--r)}.yellow{color:var(--y)}.copy{line-height:1.55}.note{font-size:11px;color:var(--muted);line-height:1.45}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:9px 6px;border-bottom:1px solid var(--line)}th{color:var(--muted)}.row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.row:last-child{border:0}.hidden{display:none!important}.bar{display:grid;grid-template-columns:1fr auto auto;gap:9px}.status{margin-top:8px}.drop{transition:.15s}.drop.over{border-color:var(--g);background:#0b2417}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}.bar{grid-template-columns:1fr}.head{min-height:64px}}
+</style>
+</head>
+<body>
+<header><div class="wrap head"><div class="brand"><div class="logo">F</div><div><div class="title">FPL Coach</div><div class="muted">Your personal FPL decision engine</div></div></div><button class="secondary" onclick="loadLive()">↻ Refresh</button></div></header>
+<main class="wrap">
+<div class="nav"><button class="active" onclick="tab('coach',this)">Coach</button><button onclick="tab('squadTab',this)">Squad</button><button onclick="tab('transfersTab',this)">Transfers</button><button onclick="tab('fixturesTab',this)">Fixtures</button><button onclick="tab('chipsTab',this)">Chips</button></div>
+
+<section id="coach" class="tab">
+<div class="card"><h2>📸 Upload your FPL team</h2>
+<div class="upload drop" id="drop"><div style="font-size:30px">📱</div><p><b>Upload one or more screenshots</b><br><span class="muted">FPL Coach reads your squad and matches names against the current FPL player database.</span></p>
+<label for="shots">Choose screenshots</label><input id="shots" type="file" accept="image/*" multiple><div id="preview" class="preview"></div></div>
+<div class="bar" style="margin-top:10px"><input id="teamId" inputmode="numeric" placeholder="Optional FPL Team ID"><button onclick="connectTeam()">Connect Team</button><button class="secondary" onclick="runScreenshot()">Analyse Screenshot</button></div>
+<div id="status" class="muted status">Loading current FPL data…</div>
+</div>
+
+<div id="summary" class="hidden">
+<div class="stats"><div class="card stat"><span>Gameweek</span><b id="gw">—</b></div><div class="card stat"><span>Players matched</span><b id="matched">—</b></div><div class="card stat"><span>Captain</span><b id="captainMini">—</b></div><div class="card stat"><span>Coach Score</span><b id="score">—</b></div></div>
+<div class="grid"><div class="card"><h2>🤖 Coach verdict</h2><div id="verdict" class="copy">—</div></div><div class="card"><h2>🧢 Captain</h2><div id="captain" class="copy">—</div></div></div>
+<div class="card"><h2>👥 Matched squad</h2><div id="xi">—</div></div>
+</div>
+</section>
+
+<section id="squadTab" class="tab hidden"><div class="card"><h2>📊 Squad</h2><div id="squad">Upload a squad screenshot first.</div></div></section>
+<section id="transfersTab" class="tab hidden"><div class="card"><h2>🔄 Transfer Lab</h2><div id="transfers">Upload a squad screenshot to unlock player-based recommendations.</div></div></section>
+<section id="fixturesTab" class="tab hidden"><div class="card"><h2>📅 Fixture Matrix</h2><div id="fixtures">Live fixture data will appear here after the data cache updates.</div></div></section>
+<section id="chipsTab" class="tab hidden"><div class="card"><h2>🧩 Chip Planner</h2><div class="row"><div><b>Wildcard</b><div class="muted">Use when several squad positions need rebuilding around a fixture swing.</div></div><span class="pill">Monitor</span></div><div class="row"><div><b>Free Hit</b><div class="muted">Preserve for a major blank or special one-week opportunity.</div></div><span class="pill">Hold</span></div><div class="row"><div><b>Bench Boost</b><div class="muted">Target a week when your bench has strong fixtures and minutes.</div></div><span class="pill">Hold</span></div><div class="row"><div><b>Triple Captain</b><div class="muted">Target an elite captain with an exceptional fixture opportunity.</div></div><span class="pill">Hold</span></div></div></section>
+<div class="card"><h2>⚙️ Data status</h2><div id="dataStatus" class="note">The site uses a GitHub Actions cache of the official FPL public data, so GitHub Pages does not need to call the FPL API directly.</div></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+const DATA_BOOT='./data/bootstrap.json',DATA_FIX='./data/fixtures.json';
+let D=null,F=[],shotFiles=[];
+const $=id=>document.getElementById(id);
+const esc=x=>String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const money=x=>'£'+(x/10).toFixed(1)+'m';
+function status(s,b=false){$('status').textContent=s;$('status').style.color=b?'#ff7777':''}
+function tab(id,btn){document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));$(id).classList.remove('hidden');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));btn.classList.add('active')}
+function currentGW(){return D?.events?.find(e=>e.is_current)||D?.events?.find(e=>e.is_next)||D?.events?.find(e=>!e.finished)||D?.events?.at(-1)}
+function pos(id){return D?.element_types?.find(x=>x.id===id)?.singular_name_short||'?'}
+function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'')}
+function scoreName(text,p){
+ const n=norm(text), web=norm(p.web_name), full=norm((p.first_name||'')+' '+(p.second_name||''));
+ if(web.length>=4&&n.includes(web))return 100+web.length;
+ if(full.length>=6&&n.includes(full))return 120+full.length;
+ const parts=[p.first_name,p.second_name].filter(Boolean).map(norm).filter(x=>x.length>=4);
+ let hits=parts.filter(x=>n.includes(x)).length;
+ return hits?hits*20:0;
+}
+async function loadLive(){
+ try{
+  $('dataStatus').textContent='Loading cached official FPL data…';
+  const [a,b]=await Promise.all([fetch(DATA_BOOT+'?v='+Date.now()),fetch(DATA_FIX+'?v='+Date.now())]);
+  if(!a.ok||!b.ok)throw new Error('cache missing');
+  D=await a.json();F=await b.json();
+  $('dataStatus').textContent='Current FPL data cache loaded.';
+  status('FPL data is ready. Upload your squad screenshot.');
+ }catch(e){
+  $('dataStatus').textContent='The data cache is not ready yet. Run the GitHub Action once, then refresh.';
+  status('FPL data cache is not ready yet.',true);
+ }
+}
+function renderMatches(matches,text){
+ $('summary').classList.remove('hidden');
+ const gw=currentGW()?.id||'—';$('gw').textContent=gw;$('matched').textContent=matches.length;
+ let sorted=[...matches].sort((a,b)=>Number(b.form||0)-Number(a.form||0)),cap=sorted[0];
+ $('captainMini').textContent=cap?.web_name||'—';
+ $('captain').innerHTML=cap?'<span class="pill">CAPTAIN CANDIDATE</span><div class="big">'+esc(cap.web_name)+'</div><div class="muted">Form '+esc(cap.form||'0')+' · '+esc(cap.points_per_game||'0')+' points/game · £'+(cap.now_cost/10).toFixed(1)+'m</div>':'No captain candidate matched yet.';
+ $('verdict').innerHTML='<b>'+matches.length+' player(s) matched.</b><br><br>'+ (matches.length>=11?'Your screenshot has enough recognised players for a squad-level analysis.':'Upload a clearer full-squad screenshot so Coach can match more players.')+'<br><br><span class="pill">Current FPL player database</span><span class="pill">Screenshot OCR</span>';
+ $('xi').innerHTML=matches.map(p=>'<span class="pill">'+esc(p.web_name)+' · '+pos(p.element_type)+' · £'+(p.now_cost/10).toFixed(1)+'m</span>').join('');
+ $('score').textContent=Math.min(100,Math.round(matches.length/15*100));
+ $('squad').innerHTML='<table><thead><tr><th>Player</th><th>Pos</th><th>Price</th><th>Form</th><th>PPG</th></tr></thead><tbody>'+matches.map(p=>'<tr><td>'+esc(p.web_name)+'</td><td>'+pos(p.element_type)+'</td><td>'+money(p.now_cost)+'</td><td>'+esc(p.form)+'</td><td>'+esc(p.points_per_game)+'</td></tr>').join('')+'</tbody></table>';
+ $('transfers').innerHTML='<div class="note">Transfer optimisation will use the matched squad plus the cached player/fixture data. Team ID integration needs a small backend because manager endpoints cannot be called safely from GitHub Pages alone.</div>';
+ $('fixtures').innerHTML='<div class="note">Fixture data is loaded from the official FPL public endpoint into this site’s GitHub data cache. Once the Action has run, this section will populate from the current season.</div>';
+}
+function runScreenshot(){
+ if(!shotFiles.length){status('Choose a screenshot first.',true);return}
+ if(!D){status('FPL data is still loading. Run the GitHub Action and refresh.',true);return}
+ status('Reading screenshot…');
+ Promise.all(shotFiles.map(f=>Tesseract.recognize(f,'eng',{logger:m=>{if(m.status==='recognizing text')status('OCR '+Math.round((m.progress||0)*100)+'%…')}}))).then(res=>{
+  const text=res.map(r=>r.data.text).join('\n');
+  const unique=new Map();
+  for(const p of D.elements){const s=scoreName(text,p);if(s>0)unique.set(p.id,{p,s})}
+  const matches=[...unique.values()].sort((a,b)=>b.s-a.s).slice(0,18).map(x=>x.p);
+  renderMatches(matches,text);status('OCR complete — '+matches.length+' players matched.');
+ }).catch(()=>status('OCR failed. Try a clearer screenshot.',true));
+}
+async function connectTeam(){status('Team ID connection will be added through the secure backend version. Screenshot mode is ready now.')}
+$('shots').addEventListener('change',()=>{shotFiles=[...$('shots').files];$('preview').innerHTML=shotFiles.map(f=>'<img src="'+URL.createObjectURL(f)+'">').join('');status(shotFiles.length+' screenshot(s) selected.')});
+['dragenter','dragover'].forEach(e=>$('drop').addEventListener(e,x=>{x.preventDefault();$('drop').classList.add('over')}));
+['dragleave','drop'].forEach(e=>$('drop').addEventListener(e,x=>{x.preventDefault();$('drop').classList.remove('over')}));
+$('drop').addEventListener('drop',e=>{shotFiles=[...e.dataTransfer.files];$('preview').innerHTML=shotFiles.map(f=>'<img src="'+URL.createObjectURL(f)+'">').join('');status(shotFiles.length+' screenshot(s) selected.')});
+loadLive();
+</script>
+</body></html>
